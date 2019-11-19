@@ -23,3 +23,9 @@ code {
 #comment {
   text-align: center;
 }
+
+#vote {
+  position: relative;
+  left: 150px;
+  bottom: 50px;
+}

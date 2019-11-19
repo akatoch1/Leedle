@@ -5,8 +5,6 @@ import Button from '@material-ui/core/Button';
 import { TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
-
-
 const Topic = (props) => (
     <div>
         <FirebaseContext.Consumer>
@@ -56,6 +54,7 @@ class TopicPage extends Component {
             topic,
             clicked
         } = this.state;
+        
         if (clicked == true) {
             return (
             <form onSubmit={this.onSubmit}>

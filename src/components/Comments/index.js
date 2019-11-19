@@ -16,18 +16,21 @@ class Comments extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            clicked: false,
             comments: [],
-            comment: ''
+            comment: '',
+            k: '',
+            votes: 0
         }
     }
 
     componentDidMount() {
+        
         let topicsRef = this.props.firebase.db.ref(this.props.topic);
         topicsRef.on("value", ss=>{
             let data = ss.val();
-            let topicIds = Object.keys(data);
-            var comments = [];
+            if (data != null) {
+                let topicIds = Object.keys(data);
+                var comments = [];
             
             topicIds.map(u => {
                 let topicsRef2 = this.props.firebase.db.ref(this.props.topic + "/" + u);
@@ -35,39 +38,86 @@ class Comments extends Component {
                     let d = snapshot.val();
                     let topicIds2 = Object.keys(d);
                     topicIds2.map(anId=>{
-                        comments.push([u, d[anId]]);
+                        let topicsRef3 = this.props.firebase.db.ref(anId);
+                        topicsRef3.on("value", ss1=> {
+                            let d1 = ss1.val();
+                            comments.push([u, d[anId], anId, d1]);
+                            this.setState({comments: comments});
+                        })
+                        
+                        
                     });
+                    
+                    
                 }
                 )
+                
             }
             )
-            this.setState({comments: comments});
-            //this.setState({users: users});
+            
+            }
         });
     }
+
+    upVote = (t) => {
+        let thedb = this.props.firebase.db.ref(t);
+        const saveState = {};
+        thedb.on("value", ss=>{
+            let data = ss.val();
+            let num = data + 1;
+            saveState.key = num;
+            
+        });
+        thedb.set(saveState.key);
+    } 
+
+    downVote = (t) => {
+        let thedb = this.props.firebase.db.ref(t);  
+        const saveState = {};
+        thedb.on("value", ss=>{
+            let data = ss.val();
+            let num = data - 1;
+            saveState.key = num;
+            
+        })
+        thedb.set(saveState.key);
+    }
+
 
     onSubmit = event => {
         event.preventDefault();
         const {comment} = this.state;
         let thedb = this.props.firebase.db;
-        thedb.ref(this.props.topic + "/" + this.props.user.displayName).push(comment);
+        let key = thedb.ref(this.props.topic + "/" + this.props.user.displayName).push().getKey();
+        thedb.ref(this.props.topic + "/" + this.props.user.displayName).child(key).set(comment);
+        thedb.ref().child(key).set(0);
         this.setState({ comment: '' });
     }
 
     onChange = event => {
-        this.setState({ [event.target.name]: event.target.value });
+        if (event.target.value.length > 0) {
+            this.setState({ [event.target.name]: event.target.value });
+        }
     };
 
     render() {
         const {
-            comment
+            comment,
+            votes
         } = this.state;
+        
         return(
             this.props.user ?
             <form onSubmit={this.onSubmit}>
             <div id = "comment">
             {this.state.comments.map(topic=>{
-                return (<h1  key={topic}>{topic[0]}: {topic[1]}</h1>);
+                return (
+                <div>
+                <button onClick = {() => this.upVote(topic[2])}>Up</button>
+                <button onClick = {() => this.downVote(topic[2])}>Down</button>
+                <h1 id = {"comment"} key={topic}>{topic[0]}: {topic[1]}</h1> 
+                <p id = "vote">{topic[3]}</p>
+                </div>);
             })} 
             <TextField
             id = "outlined-multiline-static"
@@ -84,8 +134,11 @@ class Comments extends Component {
             :
             <div id = "comment">
             {this.state.comments.map(topic=>{
-                return (<h1  key={topic}>{topic[0]}: {topic[1]}</h1>);
+                return (
+                <h1  key={topic}>{topic[0]}: {topic[1]}</h1>
+                );
             })} 
+
             </div>
         )
     }

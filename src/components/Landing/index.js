@@ -53,10 +53,11 @@ class LandingDisplay extends Component {
     }
 
     componentDidMount() {
-        
         let topicsRef = this.props.firebase.db.ref("/topics/");
+        
         topicsRef.on("value", ss=>{
             let data = ss.val();
+            if (data!=null) {
             let topicIds = Object.keys(data);
             let topics = [];
             topicIds.map(u => {
@@ -72,8 +73,11 @@ class LandingDisplay extends Component {
             }
             )
             this.setState({topics: topics});
+            }
+            
             //this.setState({users: users});
-        });
+        })
+        
     }
     
     render(){
@@ -89,7 +93,7 @@ class LandingDisplay extends Component {
                 <div>
                 <h1>Leedle</h1>
                 <SignOut {...this.props} user={this.props.user}/>
-                <Topic {...this.props} user={this.props.user} />
+                <button type = "submit" onClick = {this.onHome}>Home</button>
                 <Channel {...this.props} user = {this.props.user} topic = {this.state.chosen}/> 
                 </div>
                 :
@@ -118,6 +122,7 @@ class LandingDisplay extends Component {
                         return (<MyButton onClick = {() => this.onButtonClick(topic[1])} key={topic}>Created by: {topic[0]} {topic[1]}</MyButton>);
                     })} 
                 </div>
+                <button type = "submit" onClick = {this.onHome}>Home</button>
                 </div>
                 :
                 <div>
@@ -129,12 +134,12 @@ class LandingDisplay extends Component {
                     <Link to={ROUTES.SIGN_UP}> Sign Up</Link>
                 </ul>
                 <div id = "topic">
+                
                 {this.state.topics.map(topic=>{
                         return (<MyButton onClick = {() => this.onButtonClick(topic[1])} key={topic}>Created by: {topic[0]} {topic[1]}</MyButton>);
                     })} 
                 </div>
                 <button type = "submit" onClick = {this.onHome}>Home</button>
-                <Topic {...this.props} user={this.props.user}/>
                 </div>
             )
         }
